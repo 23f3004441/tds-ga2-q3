@@ -14,7 +14,7 @@ app.add_middleware(
 )
 
 DEFAULTS = {
-    "port": 8000,
+    "port": 8871,
     "workers": 1,
     "debug": False,
     "log_level": "warning",
