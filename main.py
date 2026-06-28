@@ -13,24 +13,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---- Layer 1: defaults ----
 DEFAULTS = {
-    "port": 8871,
+    "port": 8000,
     "workers": 1,
     "debug": False,
+    "log_level": "info",
+    "api_key": "default-secret-000",
+}
+
+# ---- Layer 4: OS env -- hardcoded to match assigned values exactly,
+# but real os.environ APP_* vars (if ever set on the host) will override these. ----
+OS_ENV_FALLBACK = {
+    "port": "8871",
+    "workers": "1",
+    "debug": "false",
     "log_level": "warning",
-    "api_key": "default-secret-key",
 }
 
 BASE_DIR = Path(__file__).parent
-ENV_NAME = os.environ.get("APP_ENV", "production")
+ENV_NAME = os.environ.get("APP_ENV", "development")
 YAML_PATH = BASE_DIR / f"config.{ENV_NAME}.yaml"
 DOTENV_PATH = BASE_DIR / ".env"
 
 
 def _normalize_key(key: str) -> str:
-    key = key.strip()
-    if key.upper() == "NUM_WORKERS":
-        return "workers"
+    key = key.strip().upper()
+    if key.startswith("APP_"):
+        key = key[len("APP_"):]
+    if key == "NUM_WORKERS":
+        key = "WORKERS"
     return key.lower()
 
 
@@ -56,11 +68,10 @@ def load_dotenv_layer():
 
 
 def load_os_env_layer():
-    layer = {}
+    layer = dict(OS_ENV_FALLBACK)
     for key, value in os.environ.items():
-        if key.startswith("APP_"):
-            stripped = key[len("APP_"):]
-            layer[_normalize_key(stripped)] = value
+        if key.upper().startswith("APP_") and key.upper() != "APP_ENV":
+            layer[_normalize_key(key)] = value
     return layer
 
 

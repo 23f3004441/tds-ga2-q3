@@ -1,0 +1,4 @@
+port: 8046
+debug: true
+log_level: info
+api_key: key-sb6jnftijz
